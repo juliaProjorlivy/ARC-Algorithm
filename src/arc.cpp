@@ -1,51 +1,68 @@
 #include "arc.hpp"
 
-// history
+template<typename PageT, typename KeyT>
+void cache_t<PageT, KeyT>::replace(KeyT key)
+{
+    if((lru_size >= 1) && ((mfu_hist.hit(key) && lru_size == p) || (lru_size > p)))
+    {
+        auto lru_page = pop_back_lru();
+        lru_hist.push_front(lru_page);
+    }
+    else
+    {
+        auto mfu_page = pop_back_mfu();
+        mfu_hist.push_front(mfu_page);
+    }
+}
 
-
-// cache
 template<typename PageT, typename KeyT>
 template<typename F>
-bool cache_t<PageT, KeyT>::lookup_update(KeyT key,  F slow_get_page)
+void cache_t<PageT, KeyT>::lookup_update(KeyT key, F slow_get_page)
 {
-    auto hit = hashTbl.find(key);
-    //if not in T1+T2
-    if(hit == hashTbl.end())
+    auto find_page = hashTbl.find(key);
+    if(hashTbl.end() != find_page)
     {
-        //if in B1
-        ptr = std::min(size, ptr + std::max(B2.length() / B1.length(), 1));
-
+        move_to_mfu_from_lru(find_page);
+    }
+    else if(lru_hist.hit(key))
+    {
+        p = std::min(size, p + std::max(mfu_hist.size() / lru_hist.size(), 1));
+        replace(key);
+        PageT page = slow_get_page(key);
+        push_front_mfu(page);
+    }
+    else if(mfu_hist.hit(key))
+    {
+        p = std::max(0, p - std::max(lru_hist.size() / mfu_hist.size(), 1));
+        replace(key);
+        PageT page = slow_get_page(key);
+        push_front_mfu(page);
     }
     else
     {
-    
-    }
-
-}
-
-template<typename PageT, typename KeyT>
-void cache_t<PageT, KeyT>::move_to(history_t<KeyT> B, KeyT key)
-{
-    // if B1 and B2 are full => pop one elem from B1
-    if(B1.length() + B2.length() >= size)
-    {
-        B.pop_back();
-    }
-    B.push_front(key);
-}
-
-template<typename PageT, typename KeyT>
-void cache_t<PageT, KeyT>::replace(KeyT key_new)
-{
-    auto key_popped = cache.pop_front();
-    hashTbl.erase(key_popped);
-    if(T1_size >= 1 && (is_B2(key_new) && T1_size == ptr) || T1_size > ptr)
-    {
-        move_to(&B1, key_popped);
-    }
-    else
-    {
-        move_to_B2(key_popped);
+        std::size_t L1_size = lru_hist.size() + lru_size == size;
+        if(L1_size)
+        {
+            if(lru_size < size)
+            {
+                lru_hist.pop_back();
+                replace(key);
+            }
+            else
+            {
+                pop_back_lru();
+            }
+        }
+        else if(L1_size < size && L1_size + mfu_hist.size() + mfu_size >= size)
+        {
+            if(L1_size + mfu_hist.size() + mfu_size == 2 * size)
+            {
+                mfu_hist.pop_back();
+            }
+            replace(key);
+        }
+        PageT page = slow_get_page(key);
+        push_front_lru(page, key);
     }
 }
 

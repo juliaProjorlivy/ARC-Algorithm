@@ -1,58 +1,33 @@
 #ifndef ARC_HPP
 #define ARC_HPP
 
-#include <cstddef>
 #include <list>
 #include <unordered_map>
-
-template<typename DataT, typename KeyT = int>
-class base_t
-{
-private:
-    std::size_t size;
-    std::list<DataT> data;
-
-    using ListIt = typename std::list<DataT>::iterator;
-    std::unordered_map<KeyT, ListIt> hashTbl;
-
-    ListIt divider;
-    ListIt ptr;
-public:
-    base_t(std::size_t _size) : size(_size), divider(0), ptr(0), data(), hashTbl() {};
-    virtual ~base_t() {};
-
-    virtual ListIt pop_back_lru() {ListIt popped = data.pop_front(); hashTbl.erase(popped); return popped;};
-    virtual ListIt pop_back_mru() {ListIt popped = data.pop_back();  hashTbl.erase(popped); return popped;};
-    virtual void push_front_lru(DataT elem, KeyT key)
-    {data.insert(divider, elem);  hashTbl.insert({key, elem});};
-    virtual void push_front_mru(DataT elem, KeyT key)
-    {data.insert(divider + 1, elem);  hashTbl.insert({key, elem});};
-
-};
-
 
 template<typename KeyT = int>
 class history_t
 {
 private:
-    std::size_t size;
-    std::list<KeyT> history;
+    std::list<KeyT> hist;
 
     using ListIt = typename std::list<KeyT>::iterator;
     std::unordered_map<KeyT, ListIt> hashTbl;
 
 public:
-    history_t(std::size_t _size) : size(_size), history(), hashTbl() {};
-    ~history_t();
+    history_t(): hist(), hashTbl() {};
+    ~history_t() {};
 
-    size_t length() {return history.length();};
-    ListIt find(KeyT key) {return history.find(key);};
+    //delete an element from the history
+    void pop_back() {auto popped = hist.pop_back(); hashTbl.erase(popped);};
 
-    void push_front(KeyT key) {hashTbl.insert(key); history.push_front(key);};
+    //add new element to the history
+    void push_front(KeyT key) {auto inserted = hist.push_front(key); hashTbl.insert({key, inserted});};
 
-    void pop_back(KeyT key) {hashTbl.erase(key); history.pop_back(key);};
+    //get number of elements in history
+    std::size_t size() {return hist.size();};
 
-    void add(KeyT key);
+    //check if an element was found in history
+    bool hit(KeyT key) {return hashTbl.find(key) != hashTbl.end();};
 };
 
 template<typename PageT, typename KeyT = int>
@@ -61,32 +36,52 @@ class cache_t
 private:
     std::size_t size;
     std::list<PageT> cache;
-    std::size_t DataT_size;
-    std::size_t ptr;
+
     using ListIt = typename std::list<PageT>::iterator;
     std::unordered_map<KeyT, ListIt> hashTbl;
 
-    history_t<KeyT> B1;
-    history_t<KeyT> B2;
+    //last recently used pages history
+    history_t<KeyT> lru_hist;
+    //most frequently used pages history
+    history_t<KeyT> mfu_hist;
 
+    //size of lru part in cache
+    int lru_size;
+    //size of mfu part in cache
+    int mfu_size;
+    //pointer-divider
+    int p;
+
+    //points to the first element in T2
+    ListIt divider;
 public:
-    cache_t(std::size_t _size) : size(_size), ptr(0), cache(), hashTbl(), B1(_size), B2(_size) {};
-    ~cache_t();
+    cache_t(std::size_t _size) : size(_size), cache(), hashTbl(), divider(cache.begin()), lru_size(0), mfu_size(0), lru_hist(), mfu_hist() {};
+    ~cache_t() {};
 
+    //pop an element from lru cache and hashTbl; returns the key of popped elelment
+    KeyT pop_back_lru() {ListIt popped = cache.pop_front(); lru_size--; return (hashTbl.erase(popped))->first;};
 
-    std::size_t get_DataTsize() {return DataT_size;};
-    std::size_t get_KeyTsize() {return cache.size() - DataT_size;};
+    //pop an element from mfu cache and hashTbl; returns the key of popped elelment
+    KeyT pop_back_mfu() {ListIt popped = cache.pop_back(); mfu_size--; return (hashTbl.erase(popped))->first;};
 
-    bool is_B1(KeyT key) {return B1.find(key) != B1.end();};
-    bool is_B2(KeyT key) {return B2.find(key) != B2.end();};
+    //just inserts page in lru cache and hashTbl
+    void push_front_lru(PageT elem, KeyT key)
+    {cache.insert(divider, elem);  hashTbl.insert({key, divider}); lru_size++;};
 
+    //just inserts page in mfu cache and hashTbl
+    void push_front_mfu(PageT elem, KeyT key)
+    {divider = cache.insert(++divider, elem);  hashTbl.insert({key, divider}); mfu_size++;};
 
-    void change_ptr(KeyT key);
+    //take an element from cache and put it into the beginning of mfu cache
+    void move_to_mfu_from_lru(ListIt elem) {divider = cache.insert(++divider, cache.erase(elem)); lru_size--; mfu_size++;};
 
+    //takes an element from cache and puts it into the history (pop from hashTbl and push into history hashTbl)
+    void replace(KeyT key);
+
+    //the main algorithm
     template<typename F>
-    bool lookup_update(KeyT key,  F slow_get_page);
+    void lookup_update(KeyT key, F slow_get_page);
 };
-
 
 #endif
 
