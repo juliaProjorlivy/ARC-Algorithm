@@ -1,6 +1,6 @@
 CXX = g++
 
-CXX_FLAGS = -I ./include/ -D _DEBUG -ggdb3 -std=c++11 -O0 -Wall -Wextra -Waggressive-loop-optimizations 	\
+CXX_FLAGS = -I ./include/ -D _DEBUG -ggdb3 -std=c++20 -O0 -Wall -Wextra -Waggressive-loop-optimizations 	\
  -Wc++14-compat -Wmissing-declarations -Wcast-align -Wcast-qual -Wchar-subscripts -Wconditionally-supported  	\
  -Wconversion -Wctor-dtor-privacy -Wempty-body -Wfloat-equal -Wformat-nonliteral -Wformat-security 				\
  -Wformat-signedness -Wformat=2 -Winline -Wlogical-op -Wnon-virtual-dtor -Wopenmp-simd -Woverloaded-virtual 	\
@@ -12,13 +12,18 @@ CXX_FLAGS = -I ./include/ -D _DEBUG -ggdb3 -std=c++11 -O0 -Wall -Wextra -Waggres
  -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
 SRCS = src/main.cpp src/arc.cpp
+TEST_SRC = src/test.cpp
 OBJ = $(patsubst %.cpp, build/%.o, $(subst src/, , $(SRCS))) 
+TEST_LIBS = -lgtest -lgmock -pthread
 EXECUTABLE = arc
 VALGRIND = valgrind --leak-check=full --leak-resolution=med ./$(EXECUTABLE)
 
 all: $(OBJ)
 	@echo "CXX $(EXECUTABLE)"
 	@$(CXX) $(CXX_FLAGS) -lasan $(OBJ) -o $(EXECUTABLE)
+tests: $(OBJ)
+	@echo "CXX $(EXECUTABLE)"
+	@$(CXX) $(CXX_FLAGS) -lasan $(OBJ) $(TEST_LIBS) -o $(EXECUTABLE)
 build/%.o: src/%.cpp
 	mkdir -p ./build
 	@$(CXX) $(CXX_FLAGS) -c -o $@ $<
