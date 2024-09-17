@@ -6,15 +6,15 @@
 struct HistoryClassTest1 : public testing::Test
 {
     history_t<int> *history; 
-    int key = 1;
 
-    void SetUp() {history = new history_t<int>(); history->push_front(key);};
+    void SetUp() {history = new history_t<int>();};
     void TearDown() {delete history;};
 };
 
 
 TEST_F(HistoryClassTest1, TEST_size)
 {
+    history->push_front(1);
     EXPECT_EQ(history->size(), 1);
 
     history->push_front(5);
@@ -31,3 +31,26 @@ TEST_F(HistoryClassTest1, TEST_hit)
     EXPECT_FALSE(history->hit(8));
     EXPECT_FALSE(history->hit(0));
 }
+
+TEST_F(HistoryClassTest1, TEST_pop_back)
+{
+    history->push_front(5);
+    history->push_front(6);
+    history->push_front(30);
+
+    history->pop_back();
+    EXPECT_FALSE(history->hit(5));
+
+    history->pop_back();
+    EXPECT_FALSE(history->hit(6));
+
+    history->pop_back();
+    EXPECT_FALSE(history->hit(30));
+
+    history->pop_back();
+    EXPECT_FALSE(history->hit(30));
+}
+
+
+
+
