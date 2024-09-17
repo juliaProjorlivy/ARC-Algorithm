@@ -67,25 +67,56 @@ public:
     bool hit(KeyT key) const {return hashTbl.find(key) != hashTbl.end();}
 
 
-    std::pair<KeyT, PageT> lru_end() const {return cache.front();};
-    std::pair<KeyT, PageT> mfu_end() const {return cache.back();};
+    std::tuple<KeyT, PageT, int> lru_end() const {return cache.front();};
+    std::tuple<KeyT, PageT, int> mfu_end() const {return cache.back();};
 
     //pops an element from lru cache and hashTbl; returns the key of popped elelment
-    KeyT pop_back_lru() {KeyT popped = (hashTbl.erase(hashTbl.find(std::get<0>(cache.front()))))->first; cache.pop_front(); lru_size--; return popped;};
+    KeyT pop_back_lru()
+    {
+        KeyT popped = (hashTbl.erase(hashTbl.find(std::get<0>(cache.front()))))->first;
+        cache.pop_front();
+        lru_size--;
+        return popped;
+    };
 
     //pops an element from mfu cache and hashTbl; returns the key of popped elelment
-    KeyT pop_back_mfu() {KeyT popped = (hashTbl.erase(hashTbl.find(std::get<0>(cache.back()))))->first; cache.pop_back(); mfu_size--; return popped;};
+    KeyT pop_back_mfu() 
+    {
+        KeyT popped = (hashTbl.erase(hashTbl.find(std::get<0>(cache.back()))))->first;
+        cache.pop_back();
+        mfu_size--;
+        return popped;
+    };
 
     //just inserts page in lru cache and hashTbl, change lru_size and returns an interator of inserted elemnt
     ListIt push_front_lru(PageT elem, KeyT key)
-    {cache.insert(divider, std::make_tuple(key, elem, in_lru));  hashTbl.insert(std::make_pair(key, divider)); lru_size++; return std::prev(divider);};
+    {
+        cache.insert(divider, std::make_tuple(key, elem, in_lru));
+        hashTbl.insert(std::make_pair(key, divider));
+        lru_size++;
+        return std::prev(divider);
+    };
 
     //just inserts page in mfu cache and hashTbl, change mfu_size and returns an iterator of inserted element
     ListIt push_front_mfu(PageT elem, KeyT key)
-    {divider = cache.insert(divider, std::make_tuple(key, elem, in_mfu));  hashTbl.insert(std::make_pair(key, divider)); mfu_size++; return divider;};
+    {
+        divider = cache.insert(divider, std::make_tuple(key, elem, in_mfu));
+        hashTbl.insert(std::make_pair(key, divider));
+        mfu_size++;
+        return divider;
+    };
 
     //take an element from cache and put it into the beginning of mfu cache, cahnges lru_size and mfu_size, returns an iterator of moved element
-    ListIt move_to_mfu_from_lru(ListIt elem) {cache.splice(divider, cache, elem, std::next(elem)); divider = std::prev(divider); if (std::get<2>(*divider) == in_lru) {lru_size--; mfu_size++;} return divider;};
+    ListIt move_to_mfu_from_lru(ListIt elem) 
+    {
+        cache.splice(divider, cache, elem, std::next(elem));
+        divider = std::prev(divider);
+        if (std::get<2>(*divider) == in_lru)
+        {
+            lru_size--; mfu_size++;
+        }
+        return divider;
+    };
 
     //takes an element from cache and puts it into the history (pop from hashTbl and push into history hashTbl)
     void replace(KeyT key)
