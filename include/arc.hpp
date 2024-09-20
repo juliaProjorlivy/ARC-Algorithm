@@ -108,7 +108,7 @@ private:
     //points to the first element in T2
     ListIt divider;
 public:
-    cache_t(std::size_t _size) : size(_size), cache(), hashTbl(), divider(), lru_size(0), mfu_size(0), lru_hist(), mfu_hist() {};
+    cache_t(int size_) : size(size_), cache(), hashTbl(), divider(), lru_size(0), mfu_size(0), lru_hist(), mfu_hist() {};
     ~cache_t() {};
 
     int get_lru_size() const {return lru_size;};
