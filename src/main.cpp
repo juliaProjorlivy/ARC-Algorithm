@@ -15,7 +15,6 @@ int main(int argc, char **argv)
     cache_t<int, int> cache{3};
     for(int i = 0; i < pages.size(); i++)
     {
-        // cache.lookup_update<int (int)>(page_keys[i], get_page);
         hits += cache.lookup_update(page_keys[i], get_page);
 
     }
