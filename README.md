@@ -9,7 +9,7 @@ make
 ./arc
 ```
 **Input:** first number - cache size; second - number of pages; next - pages (consider key = page).   
-**Output: **number of hits.   
+**Output:**  number of hits.   
 To **delete** executable run: `make clean
 `   
 ### Tests   
