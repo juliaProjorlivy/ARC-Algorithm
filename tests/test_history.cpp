@@ -11,7 +11,6 @@ struct HistoryClassTestInt : public testing::Test
     void TearDown() {delete history;};
 };
 
-
 TEST_F(HistoryClassTestInt, TEST_size)
 {
     history->push_front(1);

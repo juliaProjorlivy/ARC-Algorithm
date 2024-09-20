@@ -4,7 +4,6 @@
 
 #include "arc.hpp"
 
-
 int get_page(int key) {return key;};
 
 struct CacheClassTestInt : public testing::Test
@@ -130,5 +129,4 @@ TEST_F(CacheClassTestInt, TEST_lookup_update)
     EXPECT_EQ(cache->get_mfu_size(), 1);
     EXPECT_EQ(std::get<0>(cache->lru_end()), 4);
 }
-
 
