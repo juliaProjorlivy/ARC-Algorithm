@@ -21,25 +21,25 @@ TEST_F(CacheClassTestInt, TEST_push_front_lru)
     // {1, 1}
     EXPECT_EQ(std::get<0>(*(cache->push_front_lru(page[0], key[0]))), key[0]);
     EXPECT_EQ(cache->get_lru_size(), 1);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 1);
     EXPECT_TRUE(cache->hit(key[0]));
 
     // {2, 2}
     EXPECT_EQ(std::get<0>(*(cache->push_front_lru(page[1], key[1]))), key[1]);
     EXPECT_EQ(cache->get_lru_size(), 2);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 1);
     EXPECT_TRUE(cache->hit(key[1]));
 
     // {1, 1}
     EXPECT_EQ(std::get<0>(*(cache->push_front_lru(page[2], key[2]))), key[2]);
     EXPECT_EQ(cache->get_lru_size(), 3);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 1);
     EXPECT_TRUE(cache->hit(key[2]));
     
     // {3, 3}
     EXPECT_EQ(std::get<0>(*(cache->push_front_lru(page[3], key[3]))), key[3]);
     EXPECT_EQ(cache->get_lru_size(), 4);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 1);
     EXPECT_TRUE(cache->hit(key[3]));
 }
 
@@ -48,29 +48,29 @@ TEST_F(CacheClassTestInt, TEST_push_front_mfu)
     // {1, 1}
     EXPECT_EQ(std::get<0>(*(cache->push_front_mfu(page[0], key[0]))), key[0]);
     EXPECT_EQ(cache->get_mfu_size(), 1);
-    EXPECT_EQ(std::get<0>(cache->mfu_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_mfu_end()), 1);
     EXPECT_TRUE(cache->hit(key[0]));
 
     // {2, 2}
     EXPECT_EQ(std::get<0>(*(cache->push_front_mfu(page[1], key[1]))), key[1]);
     EXPECT_EQ(cache->get_mfu_size(), 2);
-    EXPECT_EQ(std::get<0>(cache->mfu_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_mfu_end()), 1);
     EXPECT_TRUE(cache->hit(key[1]));
 
     // {1, 1}
     EXPECT_EQ(std::get<0>(*(cache->push_front_mfu(page[2], key[2]))), key[2]);
     EXPECT_EQ(cache->get_mfu_size(), 3);
-    EXPECT_EQ(std::get<0>(cache->mfu_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_mfu_end()), 1);
     EXPECT_TRUE(cache->hit(key[2]));
     
     // {3, 3}
     EXPECT_EQ(std::get<0>(*(cache->push_front_mfu(page[3], key[3]))), key[3]);
     EXPECT_EQ(cache->get_mfu_size(), 4);
-    EXPECT_EQ(std::get<0>(cache->mfu_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_mfu_end()), 1);
     EXPECT_TRUE(cache->hit(key[3]));
 }
 
-TEST_F(CacheClassTestInt, TEST_move_to_mfu_from_lru)
+TEST_F(CacheClassTestInt, TEST_move_to_mfu)
 {
     auto lruIter1 = cache->push_front_lru(page[0], key[0]);
     auto lruIter2 = cache->push_front_lru(page[1], key[1]);
@@ -78,9 +78,9 @@ TEST_F(CacheClassTestInt, TEST_move_to_mfu_from_lru)
     auto mfuIter1 = cache->push_front_mfu(page[4], key[4]);
     auto mfuIter2 = cache->push_front_mfu(page[5], key[5]);
 
-    EXPECT_EQ(std::get<0>(*(cache->move_to_mfu_from_lru(lruIter1))), 1);
-    EXPECT_EQ(std::get<0>(*(cache->move_to_mfu_from_lru(lruIter2))), 2);
-    EXPECT_EQ(std::get<0>(*(cache->move_to_mfu_from_lru(lruIter3))), 3);
+    EXPECT_EQ(std::get<0>(*(cache->move_to_mfu(lruIter1))), 1);
+    EXPECT_EQ(std::get<0>(*(cache->move_to_mfu(lruIter2))), 2);
+    EXPECT_EQ(std::get<0>(*(cache->move_to_mfu(lruIter3))), 3);
 }
 
 TEST_F(CacheClassTestInt, TEST_lookup_update)
@@ -92,41 +92,44 @@ TEST_F(CacheClassTestInt, TEST_lookup_update)
     EXPECT_EQ(hits, 0);
     EXPECT_EQ(cache->get_lru_size(), 1);
     EXPECT_EQ(cache->get_mfu_size(), 0);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 1);
 
     //add {2, 2}
     hits += cache->lookup_update(key[1], get_page);
     EXPECT_EQ(hits, 0);
     EXPECT_EQ(cache->get_lru_size(), 2);
     EXPECT_EQ(cache->get_mfu_size(), 0);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 1);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 1);
 
     //add {1, 1}
     hits += cache->lookup_update(key[2], get_page);
     EXPECT_EQ(hits, 1);
     EXPECT_EQ(cache->get_lru_size(), 1);
     EXPECT_EQ(cache->get_mfu_size(), 1);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 2);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 2);
 
     //add {3, 3}
     hits += cache->lookup_update(key[3], get_page);
     EXPECT_EQ(hits, 1);
     EXPECT_EQ(cache->get_lru_size(), 2);
     EXPECT_EQ(cache->get_mfu_size(), 1);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 2);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 2);
 
     //add {4, 4}
     hits += cache->lookup_update(key[4], get_page);
     EXPECT_EQ(hits, 1);
     EXPECT_EQ(cache->get_lru_size(), 2);
     EXPECT_EQ(cache->get_mfu_size(), 1);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 3);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 3);
 
     //add {5, 5}
     hits += cache->lookup_update(key[5], get_page);
     EXPECT_EQ(hits, 1);
     EXPECT_EQ(cache->get_lru_size(), 2);
     EXPECT_EQ(cache->get_mfu_size(), 1);
-    EXPECT_EQ(std::get<0>(cache->lru_end()), 4);
+    EXPECT_EQ(std::get<0>(cache->get_lru_end()), 4);
+
+    EXPECT_EQ(hits, 1);
 }
+
 

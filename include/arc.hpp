@@ -46,8 +46,28 @@ public:
     history_t(): hist(), hashTbl() {};
     ~history_t() {};
 
+    int size() const {return hist.size();};
+    bool hit(KeyT key) const {return hashTbl.find(key) != hashTbl.end();};
+
+    KeyT remove(KeyT key)
+    {
+
+        if(hist.empty())
+        {
+            throw EmptyList("Trying to pop_back from an empty history\n");
+        }
+        auto found = hashTbl.find(key);
+        if(found == hashTbl.end())
+        {
+            throw HashListMissmatched("Could not find key in history hash table\n");
+        }
+        hist.erase(found->second);
+        hashTbl.erase(found);
+        return key;
+    }
+
     //delete an element from the history; return key of the removed element
-    KeyT pop_back() //TODO: ADD A RETURN VALUE TO TEST FUNC
+    KeyT pop_back()
     {
         //cannot pop anything if list is empty
         if(hist.empty())
@@ -56,15 +76,16 @@ public:
         }
 
         KeyT remove_key = hist.back();
-        auto found = hashTbl.find(remove_key);
-        //element in list was not found in hash
-        if(found == hashTbl.end())
-        {
-            throw HashListMissmatched("Last item in the history list was not found in the hitory hash\n");
-        }
-
-        hashTbl.erase(found);
-        hist.pop_back();
+        remove(remove_key);
+        // auto found = hashTbl.find(remove_key);
+        // //element in list was not found in hash
+        // if(found == hashTbl.end())
+        // {
+        //     throw HashListMissmatched("Last item in the history list was not found in the hitory hash\n");
+        // }
+        //
+        // hashTbl.erase(found);
+        // hist.pop_back();
         return remove_key;
     };
 
@@ -74,12 +95,6 @@ public:
         hist.push_front(key);
         hashTbl.insert(std::make_pair(key, hist.begin()));
     };
-
-    //get number of elements in history
-    std::size_t size() {return hist.size();};
-
-    //check if an element was found in history
-    bool hit(KeyT key) {return hashTbl.find(key) != hashTbl.end();};
 };
 
 template<typename PageT, typename KeyT = int>
@@ -108,7 +123,7 @@ private:
     //points to the first element in T2
     ListIt divider;
 public:
-    cache_t(int size_) : size(size_), cache(), hashTbl(), divider(), lru_size(0), mfu_size(0), lru_hist(), mfu_hist() {};
+    cache_t(int size_) : size(size_), cache(), hashTbl(), lru_hist(), mfu_hist(), lru_size(0), mfu_size(0), p(0), divider() {};
     ~cache_t() {};
 
     int get_lru_size() const {return lru_size;};
@@ -117,8 +132,8 @@ public:
     bool hit(KeyT key) const {return hashTbl.find(key) != hashTbl.end();}
 
 
-    std::tuple<KeyT, PageT, int> lru_end() const {return cache.front();};
-    std::tuple<KeyT, PageT, int> mfu_end() const {return cache.back();};
+    std::tuple<KeyT, PageT, int> get_lru_end() const {return cache.front();};
+    std::tuple<KeyT, PageT, int> get_mfu_end() const {return cache.back();};
 
     //pops an element from lru cache and hashTbl; returns the key of popped elelment
     KeyT pop_back_lru()
@@ -136,7 +151,7 @@ public:
         }
 
         //returns iterator following the last removed element
-        KeyT popped = (hashTbl.erase(remove_elem))->first;
+        hashTbl.erase(remove_elem);
         cache.pop_front();
         lru_size--;
         return remove_key;
@@ -150,6 +165,11 @@ public:
             throw EmptyList("Trying to pop_back from an empty mfu cache\n");
         }
 
+        if(std::prev(cache.end()) == divider)
+        {
+            divider = std::next(divider);
+        }
+
         KeyT remove_key = std::get<0>(cache.back());
         auto remove_elem = hashTbl.find(remove_key);
         if(remove_elem == hashTbl.end())
@@ -158,7 +178,7 @@ public:
         }
 
         //returns iterator following the last removed element
-        KeyT popped = (hashTbl.erase(remove_elem))->first;
+        hashTbl.erase(remove_elem);
         cache.pop_back();
         mfu_size--;
         return remove_key;
@@ -201,12 +221,13 @@ public:
     };
 
     //take an element from cache and put it into the beginning of mfu cache, cahnges lru_size and mfu_size, returns an iterator of moved element
-    ListIt move_to_mfu_from_lru(ListIt elem) 
+    ListIt move_to_mfu(ListIt elem) 
     {
-        if(cache.empty() || lru_size == 0)
+        if(cache.empty())
         {
             throw EmptyList("Trying to move element from an emtpy lru cache to mfu\n");
         }
+        if(elem == divider) {return divider;}
         cache.splice(divider, cache, elem, std::next(elem));
         divider = std::prev(divider);
         if (std::get<2>(*divider) == in_lru)
@@ -249,7 +270,7 @@ public:
         auto find_page = hashTbl.find(key);
         if(hashTbl.end() != find_page)
         {
-            try {move_to_mfu_from_lru(find_page->second);}
+            try {move_to_mfu(find_page->second);}
             catch (EmptyList& empty_list_ex) {throw empty_list_ex;}
             return 1;
         }
@@ -261,6 +282,7 @@ public:
             catch (EmptyList& empty_list_ex) {throw empty_list_ex;}
             catch (HashListMissmatched& hash_list_ex) {throw hash_list_ex;}
 
+            lru_hist.remove(key);
             push_front_mfu(slow_get_page(key), key);
         }
         else if(mfu_hist.hit(key))
@@ -271,11 +293,12 @@ public:
             catch (EmptyList& empty_list_ex) {throw empty_list_ex;}
             catch (HashListMissmatched& hash_list_ex) {throw hash_list_ex;}
 
+            mfu_hist.remove(key);
             push_front_mfu(slow_get_page(key), key);
         }
         else
         {
-            std::size_t L1_size = lru_hist.size() + lru_size;
+            int L1_size = lru_hist.size() + lru_size;
             if(L1_size == size)
             {
                 if(lru_size < size)
@@ -295,7 +318,7 @@ public:
                     catch (HashListMissmatched& hash_list_ex) {throw hash_list_ex;}
                 }
             }
-            else if(L1_size < size && L1_size + mfu_hist.size() + mfu_size >= size)
+            else if(L1_size + mfu_hist.size() + mfu_size >= size)
             {
                 if(L1_size + mfu_hist.size() + mfu_size == 2 * size)
                 {
