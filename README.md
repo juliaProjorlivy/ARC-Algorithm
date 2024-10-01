@@ -19,6 +19,17 @@ To make and run tests:
 make tests
 ./runtests
 ```
+By default filename is "data_30_2000.txt" and Ntests = 100
+To run tests with parameters -f filename  -n number of tests:   
+```
+./runtests -f filename -n Ntests
+```
+To create data for tests:   
+```
+cd arc_in_py
+python main.py -f filename -n Ntests
+```
+By default filename is "data.txt" and Ntests = 2000
 To **delete** tests run: `make tclean`    
 ### Links   
 For more information about ARC follow: [https://www.andrew.cmu.edu/course/15-440/assets/READINGS/megiddo-computer2004.pdf](https://www.andrew.cmu.edu/course/15-440/assets/READINGS/megiddo-computer2004.pdf)    

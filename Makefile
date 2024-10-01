@@ -3,7 +3,7 @@ CXX = g++
 CXX_FLAGS = -I ./include/ -D _DEBUG -ggdb3 -std=c++20 -O0 -Wall -Wextra  -Wunused -Wpedantic -Wshadow -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
 #variables for arc-algorithm
-SRCS = src/main.cpp
+SRCS = src/main.cpp src/io.cpp
 OBJ = $(patsubst %.cpp, build/%.o, $(subst src/, , $(SRCS))) 
 EXECUTABLE = arc
 
@@ -19,10 +19,10 @@ all: $(OBJ)
 build/%.o: src/%.cpp
 	mkdir -p ./build
 	@$(CXX) $(CXX_FLAGS) -c -o $@ $<
-tests: $(TEST_OBJ)
+tests: $(TEST_OBJ) build/io.o
 	@echo "CXX $(TEST_EXEC)"
-	@$(CXX) $(CXX_FLAGS) $(TEST_OBJ) $(TEST_LIBS) -o $(TEST_EXEC)
-tbuild/%.o: tests/%.cpp
+	@$(CXX) $(CXX_FLAGS) $(TEST_OBJ) build/io.o $(TEST_LIBS) -o $(TEST_EXEC)
+tbuild/%.o: tests/%.cpp src/io.cpp
 	mkdir -p ./tbuild
 	@$(CXX) $(CXX_FLAGS) -c -o $@ $<
 

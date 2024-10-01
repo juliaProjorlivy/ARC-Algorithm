@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "arc.hpp"
-
-int get_page(int key) {return key;};
+#include "io.hpp"
+// int get_page(int key) {return key;};
 
 struct CacheClassTestInt : public testing::Test
 {

@@ -57,13 +57,13 @@ class Cache(object):
             self.cached[args] = result
             if args in self.b1:
                 self.p = min(
-                    self.c, self.p + max(len(self.b2) / len(self.b1) , 1))
+                    self.c, self.p + max(int(len(self.b2) / len(self.b1)) , 1))
                 self.replace(args)
                 self.b1.remove(args)
                 self.t2.appendleft(args)
                 return 0
             if args in self.b2:
-                self.p = max(0, self.p - max(len(self.b1)/len(self.b2) , 1))
+                self.p = max(0, self.p - max(int(len(self.b1)/len(self.b2)) , 1))
                 self.replace(args)
                 self.b2.remove(args)
                 self.t2.appendleft(args)
@@ -85,36 +85,36 @@ class Cache(object):
             return 0
         return wrapper
 
-# Ntests = 2000
-# N = 10
-# file = open('data_10.txt', 'w')
-# for i in range(Ntests):
-#     cache_size = randint(3, N // 2)
-#     file.write('{0:d} '.format(cache_size))
-#     file.write('{0:d} '.format(N))
-#     cache = Cache(cache_size)
-#     arr = []
-#     for j in range(N):
-#         x = randint(1, N // 2)
-#         arr.append(x)
-#         file.write('{0:d} '.format(x))
-#     @cache
-#     def identity(f):
-#         return f
-#     res = 0
-#     for k in arr:
-#         res += identity(k)
-#     file.write('{0:d}\n'.format(res))
-# file.close()
+Ntests = 2000
+N = 30
+file = open('data_30_2000.txt', 'w')
+for i in range(Ntests):
+    cache_size = randint(3, N // 2)
+    file.write('{0:d} '.format(cache_size))
+    file.write('{0:d} '.format(N))
+    cache = Cache(cache_size)
+    arr = []
+    for j in range(N):
+        x = randint(1, N // 2)
+        arr.append(x)
+        file.write('{0:d} '.format(x))
+    @cache
+    def identity(f):
+        return f
+    res = 0
+    for k in arr:
+        res += identity(k)
+    file.write('{0:d}\n'.format(res))
+file.close()
 
-arr = [12, 9, 4, 1, 14, 15, 4, 4, 15, 12, 7, 5, 9, 12, 1, 10, 13, 3, 8, 4, 6, 2, 1, 2, 7, 6, 4, 3, 12, 13]
-cache = Cache(6)
-@cache
-def identity(f):
-    return f
-res = 0
-for k in arr:
-    print (identity(k))
+# arr = [12, 9, 4, 1, 14, 15, 4, 4, 15, 12, 7, 5, 9, 12, 1, 10, 13, 3, 8, 4, 6, 2, 1, 2, 7, 6, 4, 3, 12, 13]
+# cache = Cache(6)
+# @cache
+# def identity(f):
+#     return f
+# res = 0
+# for k in arr:
+#     print (identity(k))
 
 
 
