@@ -34,17 +34,12 @@ int manage_input(std::istream &is, int &hits)
     return 0;
 }
 
-// void manage_output_perfect_cache()
-// {
-// }
-
 int manage_input_perfect_cache(std::istream &is)
 {
     int cache_size = 0;
     int Npages = 0;
 
     is >> cache_size;
-    if(is.eof()) {std::cout << "EOF REACHED HAHAHAH\n"; return 1;}
 
     is >> Npages;
     std::unordered_map<int, std::vector<int>> map;
