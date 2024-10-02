@@ -2,6 +2,8 @@
 #include "arc.hpp"
 
 #include <iostream>
+#include <unordered_map>
+#include <limits>
 
 int get_page(int key) {return key;};
 
@@ -30,5 +32,43 @@ int manage_input(std::istream &is, int &hits)
     }
 
     return 0;
+}
+
+// void manage_output_perfect_cache()
+// {
+// }
+
+int manage_input_perfect_cache(std::istream &is)
+{
+    int cache_size = 0;
+    int Npages = 0;
+
+    is >> cache_size;
+    if(is.eof()) {std::cout << "EOF REACHED HAHAHAH\n"; return 1;}
+
+    is >> Npages;
+    std::unordered_map<int, std::vector<int>> map;
+    std::vector<int> input;
+
+    int key = 0;
+    for(int i_page = 0; i_page < Npages; i_page++)
+    {
+        is >> key;
+        auto found = map.find(key);
+        if(found == map.end())
+        {
+            map.insert(std::make_pair(key, std::vector<int> {i_page}));
+        }
+        else
+        {
+            map[key].push_back(i_page);
+        }
+        input.push_back(key);
+    }
+    is >> key;
+    is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    pcache_t<int, int> pcache(cache_size, map, input);
+    return pcache.count_hits(get_page);
 }
 

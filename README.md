@@ -31,6 +31,11 @@ python main.py -f filename -n Ntests
 ```
 By default filename is "data.txt" and Ntests = 2000
 To **delete** tests run: `make tclean`    
+### ARC and perfect cache comparison
+Let's assume we know what pages we gonna get. And according to this information we delete from the cache pages that will be used the latest.
+So I run the same data in ARC and perfect cache algorithms and according to the results draw a bar chart shown below.
+We can see that perfect cache indeed hits better than ARC. But in some cases they have the same or at least almost the same results.
+![comparison.png](comparison.png)    
 ### Links   
 For more information about ARC follow: [https://www.andrew.cmu.edu/course/15-440/assets/READINGS/megiddo-computer2004.pdf](https://www.andrew.cmu.edu/course/15-440/assets/READINGS/megiddo-computer2004.pdf)    
    
