@@ -4,7 +4,6 @@
 
 #include "arc.hpp"
 #include "io.hpp"
-// int get_page(int key) {return key;};
 
 struct CacheClassTestInt : public testing::Test
 {

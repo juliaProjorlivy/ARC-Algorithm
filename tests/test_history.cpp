@@ -20,9 +20,6 @@ TEST_F(HistoryClassTest, TEST_pop_back)
     for (int i = 0; i < 3; i++)
     {
         history->pop_back();
-        try {history->pop_back();}
-        catch (EmptyList& empty_list_ex) {std::cout << empty_list_ex.what(); break;}
-        catch (HashListMissmatched& hash_list_ex) {std::cout << hash_list_ex.what(); break;}
         EXPECT_FALSE(history->hit(i + 1));
     }
 }
